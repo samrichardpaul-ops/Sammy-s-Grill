@@ -3,25 +3,30 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-dmsans: 'DM Sans', sans-serif;
+  --font-playfair: 'Playfair Display', serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    scroll-behavior: smooth;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer components {
+  .section-divider {
+    @apply w-12 h-px bg-[#e8501a];
+  }
+  .btn-ember {
+    @apply bg-[#e8501a] text-white hover:bg-[#d84a18] transition-colors duration-300 font-medium;
+  }
+  .btn-outline {
+    @apply border border-[rgba(245,240,232,0.3)] text-[#f5f0e8] hover:bg-[rgba(245,240,232,0.05)] hover:border-[#f5f0e8] transition-all duration-300 backdrop-blur-sm;
+  }
+  .heading-playfair {
+    font-family: var(--font-playfair);
+  }
+  .text-dmsans {
+    font-family: var(--font-dmsans);
   }
 }
