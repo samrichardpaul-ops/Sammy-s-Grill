@@ -53,14 +53,12 @@ export async function POST(request: Request) {
     if (errs.length) return NextResponse.json({ errors: errs }, { status: 400 })
 
     const supabase = getServerClient()
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('reservations')
       .insert({ full_name: full_name.trim(), email: email.trim().toLowerCase(), phone: phone.trim(), reservation_date, reservation_time, guests: Number(guests), special_requests: special_requests?.trim() || null })
-      .select()
-      .single()
 
     if (error) throw error
-    return NextResponse.json({ reservation: data }, { status: 201 })
+    return NextResponse.json({ reservation: "success" }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/reservations]', err)
     return NextResponse.json({ error: 'Failed to create reservation' }, { status: 500 })

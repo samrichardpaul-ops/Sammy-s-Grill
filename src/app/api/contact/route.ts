@@ -14,12 +14,12 @@ export async function POST(request: Request) {
     if (errs.length) return NextResponse.json({ errors: errs }, { status: 400 })
 
     const supabase = getServerClient()
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('contacts')
       .insert({ name: name.trim(), email: email.trim().toLowerCase(), subject: subject.trim(), message: message.trim() })
-      .select().single()
+
     if (error) throw error
-    return NextResponse.json({ contact: data }, { status: 201 })
+    return NextResponse.json({ contact: "success" }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/contact]', err)
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
