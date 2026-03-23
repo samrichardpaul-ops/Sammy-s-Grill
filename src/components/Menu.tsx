@@ -5,23 +5,23 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const menuData = {
   Starters: [
-    { name: "Smoked Brisket Bites", desc: "Slow-smoked brisket burnt ends with honey glaze", price: "$12" },
-    { name: "Charred Eggplant Dip", desc: "Fire-roasted eggplant, tahini, warm pita", price: "$9" },
-    { name: "Crispy Calamari", desc: "Lightly dusted, served with chili aioli", price: "$14" },
+    { name: "Smoked Brisket Bites", desc: "Slow-smoked brisket burnt ends with honey glaze", price: "Rs. 12" },
+    { name: "Charred Eggplant Dip", desc: "Fire-roasted eggplant, tahini, warm pita", price: "Rs. 9" },
+    { name: "Crispy Calamari", desc: "Lightly dusted, served with chili aioli", price: "Rs. 14" },
   ],
   Mains: [
-    { name: "Sammy's Signature Ribs", desc: "Half rack of baby back ribs, house BBQ sauce", price: "$28" },
-    { name: "Wood-Fired Ribeye", desc: "12oz prime cut, garlic herb butter, grilled asparagus", price: "$42" },
-    { name: "Peri-Peri Chicken", desc: "Half chicken marinated 24hrs, flamed grilled", price: "$24" },
-    { name: "Grilled Cauliflower Steak", desc: "Chimichurri, toasted almonds, sweet potato mash", price: "$18" },
+    { name: "Sammy's Signature Ribs", desc: "Half rack of baby back ribs, house BBQ sauce", price: "Rs. 28" },
+    { name: "Wood-Fired Ribeye", desc: "12oz prime cut, garlic herb butter, grilled asparagus", price: "Rs. 42" },
+    { name: "Peri-Peri Chicken", desc: "Half chicken marinated 24hrs, flamed grilled", price: "Rs. 24" },
+    { name: "Grilled Cauliflower Steak", desc: "Chimichurri, toasted almonds, sweet potato mash", price: "Rs. 18" },
   ],
   Desserts: [
-    { name: "Charred Pineapple", desc: "Caramelized with rum, vanilla bean ice cream", price: "$10" },
-    { name: "S'mores Skillet", desc: "Graham crackers, molten chocolate, toasted marshmallow", price: "$11" },
+    { name: "Charred Pineapple", desc: "Caramelized with rum, vanilla bean ice cream", price: "Rs. 10" },
+    { name: "S'mores Skillet", desc: "Graham crackers, molten chocolate, toasted marshmallow", price: "Rs. 11" },
   ],
   Drinks: [
-    { name: "Smoked Old Fashioned", desc: "Bourbon, bitters, hickory smoke", price: "$14" },
-    { name: "Spicy Margarita", desc: "Jalapeno infused tequila, lime, agave", price: "$12" },
+    { name: "Smoked Old Fashioned", desc: "Bourbon, bitters, hickory smoke", price: "Rs. 14" },
+    { name: "Spicy Margarita", desc: "Jalapeno infused tequila, lime, agave", price: "Rs. 12" },
   ],
 }
 
