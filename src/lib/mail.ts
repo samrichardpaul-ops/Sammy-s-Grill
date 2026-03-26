@@ -25,9 +25,9 @@ export async function sendReservationEmail(
     },
   });
 
-  const customerMailOptions = {
+  const mailOptions = {
     from: `"Sammy's Grill" <${SMTP_EMAIL}>`,
-    to: to,
+    to: [to, SMTP_EMAIL], // Puts BOTH client and owner in the main 'To' field
     subject: `Reservation Confirmed - Sammy's Grill`,
     text: `Your reservation at Sammy's Grill is confirmed for ${details.reservation_date} at ${details.reservation_time} for ${details.guests} guests.`,
     html: `
@@ -82,31 +82,12 @@ export async function sendReservationEmail(
     `,
   };
 
-  const ownerMailOptions = {
-    from: `"Sammy's Grill Website" <${SMTP_EMAIL}>`,
-    to: SMTP_EMAIL,
-    subject: `New Reservation: ${details.full_name} - ${details.reservation_date}`,
-    html: `
-      <h2>New Reservation Received</h2>
-      <p><strong>Name:</strong> ${details.full_name}</p>
-      <p><strong>Email:</strong> ${to}</p>
-      <p><strong>Date:</strong> ${details.reservation_date}</p>
-      <p><strong>Time:</strong> ${details.reservation_time}</p>
-      <p><strong>Guests:</strong> ${details.guests}</p>
-      <p><strong>Requests:</strong> ${details.special_requests || 'None'}</p>
-    `,
-  };
-
   try {
-    // Run both email sends concurrently to beat Vercel's 10-second strict timeout!
-    console.log(`Sending Nodemailer emails concurrently to CUSTOMER (${to}) and OWNER (${SMTP_EMAIL})`);
+    console.log(`Sending ONE Nodemailer email directly to BOTH CUSTOMER and OWNER:`, mailOptions.to);
     
-    await Promise.all([
-      transporter.sendMail(customerMailOptions).then(() => console.log(`Reservation email sent successfully to ${to}`)),
-      transporter.sendMail(ownerMailOptions).then(() => console.log(`Notification email sent successfully to ${SMTP_EMAIL}`))
-    ]);
+    await transporter.sendMail(mailOptions);
     
-    console.log("All emails successfully handed off to Gmail SMTP server!");
+    console.log("Bulletproof email successfully handed off to Gmail SMTP server!");
   } catch (error) {
     console.error("Failed to send reservation emails:", error);
   }
