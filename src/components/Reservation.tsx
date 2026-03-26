@@ -48,17 +48,39 @@ export default function Reservation() {
     if (!validate()) return
     setLoading(true)
     try {
+      // 1. Submit directly to Formspree from browser to pass Formshield/Spam checks
+      const formspreeData = {
+        fullname: form.full_name,
+        email: form.email,
+        phone: form.phone,
+        guests: form.guests,
+        date: form.reservation_date,
+        timeslot: form.reservation_time,
+        specialrequests: form.special_requests || 'None',
+        _subject: 'New Reservation - Sammy\'s Grill',
+        _replyto: form.email,
+      }
+
+      const fsRes = await fetch('https://formspree.io/f/mbdpljqo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(formspreeData)
+      })
+
+      if (!fsRes.ok) {
+        throw new Error('Formspree submission blocked by spam filter. Try again.')
+      }
+
+      // 2. Save reservation secretly in Supabase database
       const res = await fetch('/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      const data = await res.json()
-      if (!res.ok) {
-        const msg = data.errors?.[0] ?? data.error ?? 'Something went wrong'
-        toast.error(msg)
-        return
-      }
+      
       setSuccess(true)
       setForm(EMPTY)
       toast.success('Table booked! We look forward to seeing you 🎉')

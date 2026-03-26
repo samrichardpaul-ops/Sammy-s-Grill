@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerClient } from '@/lib/supabase'
-import { sendReservationEmail } from '@/lib/mail'
+// Imports
 
 // GET /api/reservations — admin: list + search + filter
 export async function GET(request: Request) {
@@ -60,22 +60,7 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    // ✅ Send confirmation email via Formspree
-    try {
-      await sendReservationEmail(email.trim().toLowerCase(), {
-        full_name: full_name.trim(),
-        phone: phone.trim(),
-        reservation_date,
-        reservation_time,
-        guests: Number(guests),
-        special_requests: special_requests?.trim(),
-      })
-      console.log('Formspree webhook fired successfully')
-      return NextResponse.json({ reservation: "success" }, { status: 201 })
-    } catch (emailError) {
-      console.error('Failed to trigger Formspree:', emailError)
-      return NextResponse.json({ error: 'Failed to send confirmation email via Formspree.' }, { status: 500 })
-    }
+    return NextResponse.json({ reservation: "success" }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/reservations]', err)
     return NextResponse.json({ error: 'Failed to create reservation' }, { status: 500 })
