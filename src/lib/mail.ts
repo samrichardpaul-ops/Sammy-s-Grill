@@ -27,9 +27,11 @@ export async function sendReservationEmail(
 
   const mailOptions = {
     from: `"Sammy's Grill" <${SMTP_EMAIL}>`,
-    to,
+    replyTo: SMTP_EMAIL,
+    to: to,
     bcc: SMTP_EMAIL, // Send a copy to the restaurant owner
-    subject: "Reservation Confirmation - Sammy's Grill",
+    subject: `Reservation Confirmation - ${details.reservation_date} at ${details.reservation_time}`,
+    text: `Your reservation at Sammy's Grill is confirmed for ${details.reservation_date} at ${details.reservation_time} for ${details.guests} guests.`,
     html: `
       <h2>Reservation Confirmation</h2>
       <p>Dear ${details.full_name},</p>
