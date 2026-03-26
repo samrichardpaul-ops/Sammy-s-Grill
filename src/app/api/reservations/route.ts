@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     // ✅ Send confirmation email (awaiting for Vercel functions to not kill the process)
     try {
-      await sendReservationEmail(email, {
+      await sendReservationEmail(email.trim().toLowerCase(), {
         full_name: full_name.trim(),
         reservation_date,
         reservation_time,
