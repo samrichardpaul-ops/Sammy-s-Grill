@@ -60,7 +60,7 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    // ✅ Send confirmation email (awaiting for Vercel functions to not kill the process)
+    // ✅ Send confirmation email
     try {
       await sendReservationEmail(email.trim().toLowerCase(), {
         full_name: full_name.trim(),
@@ -70,11 +70,11 @@ export async function POST(request: Request) {
         special_requests: special_requests?.trim(),
       })
       console.log('Reservation email sent successfully')
+      return NextResponse.json({ reservation: "success" }, { status: 201 })
     } catch (emailError) {
       console.error('Failed to send reservation email synchronously:', emailError)
+      return NextResponse.json({ error: 'Failed to send confirmation email. Is SMTP configured properly on Vercel?' }, { status: 500 })
     }
-
-    return NextResponse.json({ reservation: "success" }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/reservations]', err)
     return NextResponse.json({ error: 'Failed to create reservation' }, { status: 500 })
