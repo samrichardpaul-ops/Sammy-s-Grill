@@ -98,15 +98,15 @@ export async function sendReservationEmail(
   };
 
   try {
-    // 1. Send completely independently to the Customer
-    console.log(`Sending Nodemailer email to CUSTOMER: ${to}`);
-    await transporter.sendMail(customerMailOptions);
-    console.log(`Reservation email sent successfully to ${to}`);
+    // Run both email sends concurrently to beat Vercel's 10-second strict timeout!
+    console.log(`Sending Nodemailer emails concurrently to CUSTOMER (${to}) and OWNER (${SMTP_EMAIL})`);
     
-    // 2. Send completely independently to the Owner
-    console.log(`Sending Nodemailer email to OWNER: ${SMTP_EMAIL}`);
-    await transporter.sendMail(ownerMailOptions);
-    console.log(`Notification email sent successfully to ${SMTP_EMAIL}`);
+    await Promise.all([
+      transporter.sendMail(customerMailOptions).then(() => console.log(`Reservation email sent successfully to ${to}`)),
+      transporter.sendMail(ownerMailOptions).then(() => console.log(`Notification email sent successfully to ${SMTP_EMAIL}`))
+    ]);
+    
+    console.log("All emails successfully handed off to Gmail SMTP server!");
   } catch (error) {
     console.error("Failed to send reservation emails:", error);
   }
