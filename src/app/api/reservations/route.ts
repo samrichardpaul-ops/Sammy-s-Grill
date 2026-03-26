@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerClient } from '@/lib/supabase'
+import { sendReservationEmail } from '@/lib/mail'
 
 // GET /api/reservations — admin: list + search + filter
 export async function GET(request: Request) {
@@ -61,7 +62,6 @@ export async function POST(request: Request) {
 
     // ✅ Send confirmation email (awaiting for Vercel functions to not kill the process)
     try {
-      const { sendReservationEmail } = await import('@/lib/mail')
       await sendReservationEmail(email, {
         full_name: full_name.trim(),
         reservation_date,
