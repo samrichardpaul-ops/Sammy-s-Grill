@@ -59,16 +59,20 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    // Send confirmation email asynchronously
-    import('@/lib/mail').then(({ sendReservationEmail }) => {
-      sendReservationEmail(email, {
+    // ✅ Send confirmation email (awaiting for Vercel functions to not kill the process)
+    try {
+      const { sendReservationEmail } = await import('@/lib/mail')
+      await sendReservationEmail(email, {
         full_name: full_name.trim(),
         reservation_date,
         reservation_time,
         guests: Number(guests),
         special_requests: special_requests?.trim(),
-      }).catch(console.error);
-    });
+      })
+      console.log('Reservation email sent successfully')
+    } catch (emailError) {
+      console.error('Failed to send reservation email synchronously:', emailError)
+    }
 
     return NextResponse.json({ reservation: "success" }, { status: 201 })
   } catch (err) {
