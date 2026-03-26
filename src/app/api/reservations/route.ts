@@ -58,6 +58,18 @@ export async function POST(request: Request) {
       .insert({ full_name: full_name.trim(), email: email.trim().toLowerCase(), phone: phone.trim(), reservation_date, reservation_time, guests: Number(guests), special_requests: special_requests?.trim() || null })
 
     if (error) throw error
+
+    // Send confirmation email asynchronously
+    import('@/lib/mail').then(({ sendReservationEmail }) => {
+      sendReservationEmail(email, {
+        full_name: full_name.trim(),
+        reservation_date,
+        reservation_time,
+        guests: Number(guests),
+        special_requests: special_requests?.trim(),
+      }).catch(console.error);
+    });
+
     return NextResponse.json({ reservation: "success" }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/reservations]', err)
