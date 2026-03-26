@@ -25,36 +25,53 @@ export async function sendReservationEmail(
     },
   });
 
-  const mailOptions = {
+  const customerMailOptions = {
     from: `"Sammy's Grill" <${SMTP_EMAIL}>`,
-    replyTo: SMTP_EMAIL,
     to: to,
-    bcc: SMTP_EMAIL, // Send a copy to the restaurant owner
-    subject: `Reservation Confirmation - ${details.reservation_date} at ${details.reservation_time}`,
+    subject: `Reservation Confirmed - Sammy's Grill`,
     text: `Your reservation at Sammy's Grill is confirmed for ${details.reservation_date} at ${details.reservation_time} for ${details.guests} guests.`,
     html: `
-      <h2>Reservation Confirmation</h2>
-      <p>Dear ${details.full_name},</p>
-      <p>Your reservation at Sammy's Grill has been confirmed!</p>
-      <br />
-      <h3>Reservation Details:</h3>
-      <ul>
-        <li><strong>Date:</strong> ${details.reservation_date}</li>
-        <li><strong>Time:</strong> ${details.reservation_time}</li>
-        <li><strong>Guests:</strong> ${details.guests}</li>
-        ${details.special_requests ? `<li><strong>Special Requests:</strong> ${details.special_requests}</li>` : ''}
-      </ul>
-      <br />
-      <p>We look forward to serving you!</p>
-      <p>Best Regards,</p>
-      <p>Sammy's Grill Team</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <h2 style="color: #e8501a;">Thank You for Your Reservation!</h2>
+        <p>Dear ${details.full_name},</p>
+        <p>Your table has been successfully reserved at Sammy's Grill.</p>
+        
+        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
+          <p><strong>📅 Date:</strong> ${details.reservation_date}</p>
+          <p><strong>⏰ Time:</strong> ${details.reservation_time}</p>
+          <p><strong>👥 Guests:</strong> ${details.guests}</p>
+          ${details.special_requests ? `<p><strong>📝 Special Requests:</strong> ${details.special_requests}</p>` : ''}
+        </div>
+        
+        <p>We look forward to serving you!</p>
+        <br/>
+        <p><strong>Sammy's Grill Team</strong></p>
+      </div>
+    `,
+  };
+
+  const ownerMailOptions = {
+    from: `"Sammy's Grill Website" <${SMTP_EMAIL}>`,
+    to: SMTP_EMAIL,
+    subject: `New Reservation: ${details.full_name} - ${details.reservation_date}`,
+    html: `
+      <h2>New Reservation Received</h2>
+      <p><strong>Name:</strong> ${details.full_name}</p>
+      <p><strong>Email:</strong> ${to}</p>
+      <p><strong>Date:</strong> ${details.reservation_date}</p>
+      <p><strong>Time:</strong> ${details.reservation_time}</p>
+      <p><strong>Guests:</strong> ${details.guests}</p>
+      <p><strong>Requests:</strong> ${details.special_requests || 'None'}</p>
     `,
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Reservation email sent successfully to ${to}`);
+    await transporter.sendMail(customerMailOptions);
+    console.log(`Reservation email sent successfully to CUSTOMER: ${to}`);
+    
+    await transporter.sendMail(ownerMailOptions);
+    console.log(`Notification email sent successfully to OWNER: ${SMTP_EMAIL}`);
   } catch (error) {
-    console.error("Failed to send reservation email:", error);
+    console.error("Failed to send reservation emails:", error);
   }
 }
