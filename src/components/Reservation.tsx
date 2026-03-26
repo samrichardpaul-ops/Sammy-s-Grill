@@ -95,11 +95,10 @@ export default function Reservation() {
 
       if (!reservationResponse.ok) {
         const data = await reservationResponse.json().catch(() => null)
-        const message =
-          data?.errors?.[0] ||
-          data?.error ||
-          'Booking email was sent, but saving the reservation failed'
-        throw new Error(message)
+        console.error('Reservation database save failed:', data)
+        toast('Booking email sent, but admin dashboard save failed.', {
+          icon: '⚠️',
+        })
       }
 
       setSuccess(true)
