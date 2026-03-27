@@ -62,3 +62,46 @@ export async function sendOwnerReservationEmail(details: ReservationMailDetails)
     `,
   })
 }
+
+export async function sendClientReservationEmail(details: ReservationMailDetails) {
+  const smtpEmail = process.env.SMTP_EMAIL?.trim()
+
+  if (!smtpEmail) {
+    throw new Error('SMTP_EMAIL is missing')
+  }
+
+  const transporter = getTransporter()
+
+  await transporter.sendMail({
+    from: `"Sammy's Grill" <${smtpEmail}>`,
+    to: details.email.trim(),
+    replyTo: smtpEmail,
+    subject: `Reservation received for ${details.reservation_date}`,
+    text: [
+      `Hi ${details.full_name.trim()},`,
+      '',
+      `We received your reservation request.`,
+      `Date: ${details.reservation_date}`,
+      `Time: ${details.reservation_time}`,
+      `Guests: ${details.guests}`,
+      `Special requests: ${details.special_requests?.trim() || 'None'}`,
+      '',
+      `We will contact you shortly to confirm.`,
+      '',
+      `Sammy's Grill`,
+    ].join('\n'),
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f1f1f;">
+        <h2 style="margin-bottom: 16px;">Reservation Received</h2>
+        <p>Hi ${details.full_name.trim()},</p>
+        <p>We received your reservation request.</p>
+        <p><strong>Date:</strong> ${details.reservation_date}</p>
+        <p><strong>Time:</strong> ${details.reservation_time}</p>
+        <p><strong>Guests:</strong> ${details.guests}</p>
+        <p><strong>Special requests:</strong> ${details.special_requests?.trim() || 'None'}</p>
+        <p>We will contact you shortly to confirm.</p>
+        <p><strong>Sammy's Grill</strong></p>
+      </div>
+    `,
+  })
+}

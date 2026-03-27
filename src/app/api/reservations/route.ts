@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerClient } from '@/lib/supabase'
-import { sendOwnerReservationEmail } from '@/lib/mail'
+import { sendClientReservationEmail, sendOwnerReservationEmail } from '@/lib/mail'
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message
@@ -75,6 +75,14 @@ export async function POST(request: Request) {
       const message = getErrorMessage(mailError)
       console.error('[POST /api/reservations] Owner email failed', mailError)
       return NextResponse.json({ error: `Owner email failed: ${message}` }, { status: 500 })
+    }
+
+    try {
+      await sendClientReservationEmail(payload)
+    } catch (mailError) {
+      const message = getErrorMessage(mailError)
+      console.error('[POST /api/reservations] Client email failed', mailError)
+      return NextResponse.json({ error: `Client email failed: ${message}` }, { status: 500 })
     }
 
     let databaseSaved = false
