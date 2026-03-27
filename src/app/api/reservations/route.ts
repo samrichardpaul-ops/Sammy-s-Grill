@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server'
 import { getServerClient } from '@/lib/supabase'
 import { sendOwnerReservationEmail } from '@/lib/mail'
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Unknown error'
+}
+
 // GET /api/reservations — admin: list + search + filter
 export async function GET(request: Request) {
   try {
@@ -63,6 +69,14 @@ export async function POST(request: Request) {
       special_requests: special_requests?.trim() || null,
     }
 
+    try {
+      await sendOwnerReservationEmail(payload)
+    } catch (mailError) {
+      const message = getErrorMessage(mailError)
+      console.error('[POST /api/reservations] Owner email failed', mailError)
+      return NextResponse.json({ error: `Owner email failed: ${message}` }, { status: 500 })
+    }
+
     let databaseSaved = false
     try {
       const supabase = getServerClient()
@@ -78,8 +92,6 @@ export async function POST(request: Request) {
     } catch (dbError) {
       console.error('[POST /api/reservations] Supabase exception', dbError)
     }
-
-    await sendOwnerReservationEmail(payload)
 
     return NextResponse.json({ reservation: 'success', databaseSaved }, { status: 201 })
   } catch (err) {
