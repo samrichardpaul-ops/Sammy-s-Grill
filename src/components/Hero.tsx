@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
+import FireParticles from './FireParticles'
 
 const TICKER_ITEMS = [
   '🔥 Happy Hour: 30% off all drinks Mon–Fri 5–7 PM',
@@ -43,9 +44,29 @@ export default function Hero() {
         }}
       />
 
-      {/* Overlays */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(10,8,6,0.92) 0%, rgba(10,8,6,0.65) 60%, rgba(10,8,6,0.40) 100%)' }} />
-      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 15% 55%, rgba(232,80,26,0.14) 0%, transparent 65%)' }} />
+      {/* Dark overlay */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(10,8,6,0.93) 0%, rgba(10,8,6,0.68) 60%, rgba(10,8,6,0.42) 100%)' }} />
+
+      {/* Flame-colored radial glow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at 15% 55%, rgba(232,80,26,0.16) 0%, transparent 65%)',
+          animation: 'flameFlicker 4s ease-in-out infinite',
+        }}
+      />
+
+      {/* Bottom flame glow */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none"
+        style={{
+          background: 'linear-gradient(to top, rgba(232,80,26,0.22) 0%, rgba(212,80,26,0.06) 50%, transparent 100%)',
+          animation: 'flameFlicker 3s 0.5s ease-in-out infinite',
+        }}
+      />
+
+      {/* Fire Particles */}
+      <FireParticles count={25} />
 
       {/* Decorative flame lines */}
       <div className="absolute top-1/3 right-0 w-px h-64 opacity-20" style={{ background: 'linear-gradient(180deg, transparent, #e8501a, transparent)' }} />
@@ -59,9 +80,7 @@ export default function Hero() {
       >
         <div
           className="flex gap-12 whitespace-nowrap"
-          style={{
-            animation: 'ticker 30s linear infinite',
-          }}
+          style={{ animation: 'ticker 30s linear infinite' }}
         >
           {tickerContent.map((item, i) => (
             <span
@@ -73,12 +92,6 @@ export default function Hero() {
             </span>
           ))}
         </div>
-        <style>{`
-          @keyframes ticker {
-            from { transform: translateX(0); }
-            to   { transform: translateX(-50%); }
-          }
-        `}</style>
       </div>
 
       {/* Content */}
@@ -111,7 +124,7 @@ export default function Hero() {
                 className="text-5xl lg:text-7xl font-bold mb-6"
               >
                 Where Fire<br />
-                Meets <span style={{ color: '#e8501a', fontStyle: 'italic' }}>Flavour</span>
+                Meets <span style={{ color: '#e8501a', fontStyle: 'italic', textShadow: '0 0 40px rgba(232,80,26,0.5)' }}>Flavour</span>
               </motion.h1>
 
               <motion.p
@@ -134,6 +147,7 @@ export default function Hero() {
                 <a
                   href="#reservation"
                   className="btn-ember text-base px-8 py-3.5 rounded-lg"
+                  style={{ boxShadow: '0 8px 32px rgba(232,80,26,0.45)' }}
                 >
                   🍽 Book a Table
                 </a>
@@ -161,7 +175,7 @@ export default function Hero() {
                   <div key={s.label}>
                     <div
                       className="text-2xl font-bold"
-                      style={{ fontFamily: "'Playfair Display',serif", color: '#e8501a' }}
+                      style={{ fontFamily: "'Playfair Display',serif", color: '#e8501a', textShadow: '0 0 20px rgba(232,80,26,0.4)' }}
                     >
                       {s.val}
                     </div>
@@ -208,15 +222,24 @@ export default function Hero() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.7 + i * 0.15 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl backdrop-blur-md border"
-                  style={{ background: 'rgba(20,16,12,0.7)', borderColor: 'rgba(255,255,255,0.08)' }}
+                  className="flex items-center gap-4 p-4 rounded-2xl backdrop-blur-md border hover:border-[#e8501a]/30 transition-all duration-300 group"
+                  style={{
+                    background: 'rgba(20,16,12,0.7)',
+                    borderColor: 'rgba(255,255,255,0.08)',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+                  }}
                 >
                   <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={card.img} alt={card.title} className="w-full h-full object-cover" />
+                    <img
+                      src={card.img}
+                      alt={card.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#e8501a]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <div>
-                    <p className="text-white font-semibold text-sm mb-0.5 heading-playfair">
+                    <p className="text-white font-semibold text-sm mb-0.5 heading-playfair group-hover:text-[#e8501a] transition-colors">
                       {card.emoji} {card.title}
                     </p>
                     <p className="text-white/50 text-xs leading-relaxed" style={{ fontFamily: "'DM Sans',sans-serif" }}>
@@ -242,7 +265,7 @@ export default function Hero() {
         <div className="w-px h-10 relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.12)' }}>
           <motion.div
             className="w-full absolute top-0"
-            style={{ height: '40%', background: '#e8501a' }}
+            style={{ height: '40%', background: '#e8501a', boxShadow: '0 0 8px #e8501a' }}
             animate={{ top: ['0%', '100%'] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           />

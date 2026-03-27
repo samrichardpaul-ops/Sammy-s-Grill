@@ -1,13 +1,18 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Star } from 'lucide-react'
+import { Check, Star, Lock } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import PaymentModal, { type PaymentItem } from './PaymentModal'
+import toast from 'react-hot-toast'
 
 const packages = [
   {
     name: "Grill Experience",
     subtitle: "Perfect for individuals & couples",
     price: "Rs. 1,999",
+    priceNum: 1999,
     unit: "per person",
     badge: null,
     color: "#e8501a",
@@ -26,6 +31,7 @@ const packages = [
     name: "Celebration",
     subtitle: "Birthdays, anniversaries & milestones",
     price: "Rs. 3,499",
+    priceNum: 3499,
     unit: "per couple",
     badge: "Most Popular",
     color: "#d4a853",
@@ -46,6 +52,7 @@ const packages = [
     name: "Corporate",
     subtitle: "Team lunches, client dinners & events",
     price: "Rs. 999",
+    priceNum: 999,
     unit: "per head (min. 10)",
     badge: null,
     color: "#7b9cda",
@@ -65,6 +72,34 @@ const packages = [
 ]
 
 export default function Packages() {
+  const { user, openAuth } = useAuth()
+  const [paymentItem, setPaymentItem] = useState<PaymentItem | null>(null)
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+
+  function handleBookPackage(pkg: (typeof packages)[0]) {
+    const item: PaymentItem = {
+      name: pkg.name + ' Package',
+      description: pkg.subtitle,
+      price: pkg.price,
+      priceNum: pkg.priceNum,
+      image: pkg.image,
+    }
+
+    if (!user) {
+      openAuth(() => {
+        setPaymentItem(item)
+        setIsPaymentOpen(true)
+      })
+    } else {
+      setPaymentItem(item)
+      setIsPaymentOpen(true)
+    }
+  }
+
+  function handlePaymentSuccess() {
+    toast.success('Package booked! See you at Sammy\'s 🔥', { duration: 4000 })
+  }
+
   return (
     <section id="packages" className="py-24 bg-[#fbf9f6] relative overflow-hidden">
       {/* Subtle background pattern */}
@@ -189,32 +224,48 @@ export default function Packages() {
                 </ul>
               </div>
 
-              {/* CTA */}
+              {/* CTA Button — triggers auth + payment */}
               <div className="px-6 pb-6">
-                <a
-                  href="#reservation"
-                  className="block text-center w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-300"
+                <button
+                  onClick={() => handleBookPackage(pkg)}
+                  className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn"
                   style={{
                     background: pkg.badge ? `linear-gradient(135deg, ${pkg.color}, ${pkg.color}cc)` : 'transparent',
                     color: pkg.badge ? 'white' : pkg.color,
                     border: `2px solid ${pkg.color}`,
                     fontFamily: "'DM Sans',sans-serif",
+                    boxShadow: pkg.badge ? `0 4px 20px ${pkg.color}40` : 'none',
                   }}
-                  onMouseEnter={(e) => {
+                  onMouseEnter={e => {
                     if (!pkg.badge) {
-                      (e.currentTarget as HTMLElement).style.background = pkg.color
-                      ;(e.currentTarget as HTMLElement).style.color = 'white'
+                      const el = e.currentTarget as HTMLElement
+                      el.style.background = pkg.color
+                      el.style.color = 'white'
+                      el.style.boxShadow = `0 4px 20px ${pkg.color}40`
                     }
                   }}
-                  onMouseLeave={(e) => {
+                  onMouseLeave={e => {
                     if (!pkg.badge) {
-                      (e.currentTarget as HTMLElement).style.background = 'transparent'
-                      ;(e.currentTarget as HTMLElement).style.color = pkg.color
+                      const el = e.currentTarget as HTMLElement
+                      el.style.background = 'transparent'
+                      el.style.color = pkg.color
+                      el.style.boxShadow = 'none'
                     }
                   }}
                 >
+                  <Lock size={14} className="opacity-60" />
                   {pkg.cta}
-                </a>
+                </button>
+
+                {/* Login hint */}
+                {!user && (
+                  <p
+                    className="text-center text-[10px] mt-2 text-gray-400"
+                    style={{ fontFamily: "'DM Sans',sans-serif" }}
+                  >
+                    Sign in required to book
+                  </p>
+                )}
               </div>
             </motion.div>
           ))}
@@ -230,6 +281,16 @@ export default function Packages() {
           All packages can be customised. Reach out via the reservation form or call us directly.
         </motion.p>
       </div>
+
+      {/* Payment Modal */}
+      {paymentItem && (
+        <PaymentModal
+          isOpen={isPaymentOpen}
+          onClose={() => setIsPaymentOpen(false)}
+          onSuccess={handlePaymentSuccess}
+          item={paymentItem}
+        />
+      )}
     </section>
   )
 }

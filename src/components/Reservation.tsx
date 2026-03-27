@@ -4,7 +4,9 @@ import { useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import toast from 'react-hot-toast'
 import type { ReservationInsert } from '@/lib/types'
-import { Calendar, Clock, Users, ChefHat, Gift } from 'lucide-react'
+import { Calendar, Clock, Users, ChefHat, Gift, Lock } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import PaymentModal, { type PaymentItem } from './PaymentModal'
 
 const EMPTY: ReservationInsert = {
   full_name: '',
@@ -30,6 +32,8 @@ const BOOKING_TYPES = [
     icon: <ChefHat size={18} />,
     desc: 'A simple, great meal',
     color: '#e8501a',
+    price: 'Rs. 499',
+    priceNum: 499,
   },
   {
     id: 'celebration',
@@ -37,6 +41,8 @@ const BOOKING_TYPES = [
     icon: <Gift size={18} />,
     desc: 'Birthday, anniversary & more',
     color: '#d4a853',
+    price: 'Rs. 3,499',
+    priceNum: 3499,
   },
   {
     id: 'corporate',
@@ -44,6 +50,8 @@ const BOOKING_TYPES = [
     icon: <Users size={18} />,
     desc: 'Team lunches & events',
     color: '#7b9cda',
+    price: 'Rs. 999/head',
+    priceNum: 999,
   },
 ]
 
@@ -89,11 +97,7 @@ function ConfirmationCard({
         />
         <div className="text-center z-10 px-4">
           <div className="text-4xl mb-2">🎉</div>
-          <h3
-            className="text-white text-2xl font-bold heading-playfair"
-          >
-            Booking Confirmed!
-          </h3>
+          <h3 className="text-white text-2xl font-bold heading-playfair">Booking Confirmed!</h3>
           <p className="text-white/80 text-sm mt-1" style={{ fontFamily: "'DM Sans',sans-serif" }}>
             We can&apos;t wait to welcome you to Sammy&apos;s Grill
           </p>
@@ -178,8 +182,8 @@ function ConfirmationCard({
               border: '1px solid #3a3a3a',
               color: '#8a8a8a',
             }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'white')}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = '#8a8a8a')}
+            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'white')}
+            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = '#8a8a8a')}
           >
             Browse Menu
           </a>
@@ -199,9 +203,15 @@ export default function Reservation() {
   const [success, setSuccess] = useState(false)
   const [submittedForm, setSubmittedForm] = useState<ReservationInsert>(EMPTY)
 
+  // Payment state
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+  const [pendingPaymentForm, setPendingPaymentForm] = useState<ReservationInsert | null>(null)
+
+  const { user, openAuth } = useAuth()
+
   function set(field: keyof ReservationInsert, value: string | number) {
-    setForm((prev) => ({ ...prev, [field]: value }))
-    setErrors((prev) => {
+    setForm(prev => ({ ...prev, [field]: value }))
+    setErrors(prev => {
       const next = { ...prev }
       delete next[field]
       return next
@@ -220,15 +230,33 @@ export default function Reservation() {
     return Object.keys(nextErrors).length === 0
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Step 1: Validate form and open payment
+  function handleProceedToPayment(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!validate()) return
+
+    const openPayment = () => {
+      setPendingPaymentForm({ ...form })
+      setIsPaymentOpen(true)
+    }
+
+    if (!user) {
+      openAuth(openPayment)
+    } else {
+      openPayment()
+    }
+  }
+
+  // Step 2: After payment success, submit to API
+  async function handlePaymentSuccess() {
+    if (!pendingPaymentForm) return
     setLoading(true)
     try {
+      const selectedType = BOOKING_TYPES.find(t => t.id === bookingType)
       const payload = {
-        ...form,
+        ...pendingPaymentForm,
         booking_type: bookingType,
-        special_requests: `[${BOOKING_TYPES.find((t) => t.id === bookingType)?.label}] ${form.special_requests}`,
+        special_requests: `[${selectedType?.label}] ${pendingPaymentForm.special_requests}`,
       }
       const response = await fetch('/api/reservations', {
         method: 'POST',
@@ -243,17 +271,20 @@ export default function Reservation() {
       if (data?.databaseSaved === false) {
         toast('Owner notified, but dashboard save failed.', { icon: '⚠️' })
       }
-      setSubmittedForm({ ...form })
+      setSubmittedForm({ ...pendingPaymentForm })
       setSuccess(true)
       setForm(EMPTY)
-      toast.success('Reservation sent! Check your email for confirmation.')
+      toast.success('Reservation confirmed! Check your email for details.')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Booking failed. Please try again.'
       toast.error(message)
     } finally {
       setLoading(false)
+      setPendingPaymentForm(null)
     }
   }
+
+  const selectedTypeData = BOOKING_TYPES.find(t => t.id === bookingType)
 
   const lbl = (text: string, req?: boolean) => (
     <label
@@ -279,7 +310,7 @@ export default function Reservation() {
       id="reservation"
       ref={ref}
       className="py-24 lg:py-32 relative overflow-hidden"
-      style={{ background: '#242424' }}
+      style={{ background: '#1a1a1a' }}
     >
       <div
         className="absolute inset-0 opacity-[0.03]"
@@ -310,7 +341,7 @@ export default function Reservation() {
             Make a <span style={{ color: '#e8501a', fontStyle: 'italic' }}>Reservation</span>
           </h2>
           <p style={{ fontFamily: "'DM Sans',sans-serif", color: '#8a8a8a', fontSize: '0.95rem' }}>
-            Book your table now and enjoy a wonderful dining experience
+            Book your table now — secure payment, instant confirmation
           </p>
         </motion.div>
 
@@ -328,9 +359,9 @@ export default function Reservation() {
             initial={{ opacity: 0, y: 24 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.15 }}
-            onSubmit={handleSubmit}
+            onSubmit={handleProceedToPayment}
             className="rounded-2xl p-8 lg:p-10"
-            style={{ background: '#1a1a1a', border: '1px solid #2e2e2e' }}
+            style={{ background: '#141414', border: '1px solid #2a2a2a' }}
           >
             {/* Booking Type Selector */}
             <div className="mb-7">
@@ -348,8 +379,8 @@ export default function Reservation() {
                     onClick={() => setBookingType(type.id)}
                     className="flex flex-col items-start gap-1.5 p-4 rounded-xl border transition-all text-left"
                     style={{
-                      background: bookingType === type.id ? `${type.color}15` : '#242424',
-                      borderColor: bookingType === type.id ? type.color : '#3a3a3a',
+                      background: bookingType === type.id ? `${type.color}15` : '#1e1e1e',
+                      borderColor: bookingType === type.id ? type.color : '#2e2e2e',
                       boxShadow: bookingType === type.id ? `0 0 0 1px ${type.color}40` : 'none',
                     }}
                   >
@@ -371,6 +402,12 @@ export default function Reservation() {
                     >
                       {type.desc}
                     </span>
+                    <span
+                      className="text-xs font-bold mt-0.5"
+                      style={{ color: type.color, fontFamily: "'DM Sans',sans-serif" }}
+                    >
+                      {type.price}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -382,7 +419,7 @@ export default function Reservation() {
                 <input
                   className="form-field"
                   value={form.full_name}
-                  onChange={(e) => set('full_name', e.target.value)}
+                  onChange={e => set('full_name', e.target.value)}
                   placeholder="John Smith"
                 />
                 {errMsg('full_name')}
@@ -393,7 +430,7 @@ export default function Reservation() {
                   className="form-field"
                   type="email"
                   value={form.email}
-                  onChange={(e) => set('email', e.target.value)}
+                  onChange={e => set('email', e.target.value)}
                   placeholder="john@example.com"
                 />
                 {errMsg('email')}
@@ -407,7 +444,7 @@ export default function Reservation() {
                   className="form-field"
                   type="tel"
                   value={form.phone}
-                  onChange={(e) => set('phone', e.target.value)}
+                  onChange={e => set('phone', e.target.value)}
                   placeholder="+91 98765 43210"
                 />
                 {errMsg('phone')}
@@ -417,9 +454,9 @@ export default function Reservation() {
                 <select
                   className="form-field"
                   value={form.guests}
-                  onChange={(e) => set('guests', Number(e.target.value))}
+                  onChange={e => set('guests', Number(e.target.value))}
                 >
-                  {GUEST_OPTIONS.map((n) => (
+                  {GUEST_OPTIONS.map(n => (
                     <option key={n} value={n}>
                       {n} {n === 1 ? 'Guest' : 'Guests'}
                     </option>
@@ -437,7 +474,7 @@ export default function Reservation() {
                   type="date"
                   min={today}
                   value={form.reservation_date}
-                  onChange={(e) => set('reservation_date', e.target.value)}
+                  onChange={e => set('reservation_date', e.target.value)}
                   style={{ colorScheme: 'dark' }}
                 />
                 {errMsg('reservation_date')}
@@ -447,21 +484,17 @@ export default function Reservation() {
                 <select
                   className="form-field"
                   value={form.reservation_time}
-                  onChange={(e) => set('reservation_time', e.target.value)}
+                  onChange={e => set('reservation_time', e.target.value)}
                 >
                   <option value="">Select a time...</option>
                   <optgroup label="Lunch (11:00 - 14:30)">
-                    {TIME_SLOTS.slice(0, 8).map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
+                    {TIME_SLOTS.slice(0, 8).map(t => (
+                      <option key={t} value={t}>{t}</option>
                     ))}
                   </optgroup>
                   <optgroup label="Dinner (18:00 - 22:00)">
-                    {TIME_SLOTS.slice(8).map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
+                    {TIME_SLOTS.slice(8).map(t => (
+                      <option key={t} value={t}>{t}</option>
                     ))}
                   </optgroup>
                 </select>
@@ -475,16 +508,37 @@ export default function Reservation() {
                 className="form-field"
                 rows={3}
                 value={form.special_requests}
-                onChange={(e) => set('special_requests', e.target.value)}
+                onChange={e => set('special_requests', e.target.value)}
                 placeholder="Allergies, special occasions, seating preferences, dietary needs..."
               />
+            </div>
+
+            {/* Price summary */}
+            <div
+              className="flex items-center justify-between mb-5 px-4 py-3 rounded-xl"
+              style={{ background: '#1e1e1e', border: '1px solid #2a2a2a' }}
+            >
+              <div>
+                <p className="text-xs text-white/40 mb-0.5" style={{ fontFamily: "'DM Sans',sans-serif" }}>
+                  Booking total
+                </p>
+                <p className="text-white font-semibold text-sm" style={{ fontFamily: "'DM Sans',sans-serif" }}>
+                  {selectedTypeData?.label}
+                </p>
+              </div>
+              <p
+                className="text-xl font-bold"
+                style={{ fontFamily: "'Playfair Display',serif", color: selectedTypeData?.color }}
+              >
+                {selectedTypeData?.price}
+              </p>
             </div>
 
             <button
               type="submit"
               disabled={loading}
               className="btn-ember w-full justify-center text-base flex items-center gap-2"
-              style={{ borderRadius: '8px', padding: '1rem' }}
+              style={{ borderRadius: '10px', padding: '1rem' }}
             >
               {loading ? (
                 <>
@@ -495,19 +549,38 @@ export default function Reservation() {
                   Processing...
                 </>
               ) : (
-                'Confirm Reservation'
+                <>
+                  <Lock size={16} />
+                  Proceed to Payment
+                </>
               )}
             </button>
 
             <p
               className="text-center mt-4 text-xs"
-              style={{ fontFamily: "'DM Sans',sans-serif", color: '#8a8a8a' }}
+              style={{ fontFamily: "'DM Sans',sans-serif", color: '#6a6a6a' }}
             >
-              You&apos;ll receive a confirmation email with your booking details.
+              {user
+                ? '🔒 Secure checkout · You\'ll receive a confirmation email after payment.'
+                : '🔒 Sign in required — create a free account to complete your booking.'}
             </p>
           </motion.form>
         )}
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        onSuccess={handlePaymentSuccess}
+        item={{
+          name: `Table Reservation — ${selectedTypeData?.label}`,
+          description: `${form.guests} guest${Number(form.guests) !== 1 ? 's' : ''} · ${form.reservation_date || 'Date TBD'} · ${form.reservation_time || 'Time TBD'}`,
+          price: selectedTypeData?.price ?? 'Rs. 499',
+          priceNum: selectedTypeData?.priceNum ?? 499,
+          image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80',
+        }}
+      />
     </section>
   )
 }

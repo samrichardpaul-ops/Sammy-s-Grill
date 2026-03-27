@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Playfair_Display, DM_Sans } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
+import { AuthProvider } from '@/context/AuthContext'
+import AuthModal from '@/components/AuthModal'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -53,21 +55,24 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${playfair.variable} font-sans bg-[#0f0f0e] text-[#2c2825] antialiased`}
       >
-        {children}
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: '#1a1a1a',
-              color: '#faf8f4',
-              border: '1px solid #2e2e2e',
-              fontFamily: "'DM Sans', sans-serif",
-            },
-            success: {
-              iconTheme: { primary: '#e8501a', secondary: '#fff' },
-            },
-          }}
-        />
+        <AuthProvider>
+          {children}
+          <AuthModal />
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: '#1a1a1a',
+                color: '#faf8f4',
+                border: '1px solid #2e2e2e',
+                fontFamily: "'DM Sans', sans-serif",
+              },
+              success: {
+                iconTheme: { primary: '#e8501a', secondary: '#fff' },
+              },
+            }}
+          />
+        </AuthProvider>
       </body>
     </html>
   )
