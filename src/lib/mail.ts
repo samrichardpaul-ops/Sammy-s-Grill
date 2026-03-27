@@ -11,8 +11,8 @@ type ReservationMailDetails = {
 }
 
 function getTransporter() {
-  const user = process.env.SMTP_EMAIL
-  const pass = process.env.SMTP_PASSWORD
+  const user = process.env.SMTP_EMAIL?.trim()
+  const pass = process.env.SMTP_PASSWORD?.replace(/\s+/g, '')
 
   if (!user || !pass) {
     throw new Error('SMTP_EMAIL or SMTP_PASSWORD is missing')
