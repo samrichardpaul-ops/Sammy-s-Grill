@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import type { ReservationInsert } from '@/lib/types'
 import { Calendar, Clock, Users, ChefHat, Gift, Lock } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import PaymentModal, { type PaymentItem } from './PaymentModal'
+import PaymentModal from './PaymentModal'
 
 const EMPTY: ReservationInsert = {
   full_name: '',

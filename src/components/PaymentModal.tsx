@@ -75,6 +75,8 @@ export default function PaymentModal({ isOpen, onClose, onSuccess, item }: Payme
     ? cardNum.replace(/\d(?=(?:\D*\d){4})/g, '•').padEnd(19, ' ')
     : '•••• •••• •••• ••••'
 
+  void maskedDisplay
+
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
