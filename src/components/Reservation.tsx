@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
-import toast from 'react-hot-toast'
 import type { ReservationInsert } from '@/lib/types'
 
 const EMPTY: ReservationInsert = {
@@ -28,8 +27,6 @@ export default function Reservation() {
   const inView = useInView(ref, { once: true, margin: '-60px' })
   const [form, setForm] = useState<ReservationInsert>(EMPTY)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
 
   function set(field: keyof ReservationInsert, value: string | number) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -54,61 +51,9 @@ export default function Reservation() {
     return Object.keys(nextErrors).length === 0
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!validate()) return
-
-    setLoading(true)
-
-    try {
-      const formspreeData = new URLSearchParams({
-        fullname: form.full_name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        guests: String(form.guests),
-        date: form.reservation_date,
-        timeslot: form.reservation_time,
-        specialrequests: form.special_requests?.trim() || 'None',
-        _subject: "New Reservation - Sammy's Grill",
-        _replyto: form.email.trim(),
-      })
-
-      const formspreeResponse = await fetch(FORMSPREE_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json',
-        },
-        body: formspreeData.toString(),
-      })
-
-      if (!formspreeResponse.ok) {
-        const errorText = await formspreeResponse.text()
-        throw new Error(errorText || 'Form submission failed')
-      }
-
-      const reservationResponse = await fetch('/api/reservations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-
-      if (!reservationResponse.ok) {
-        const data = await reservationResponse.json().catch(() => null)
-        console.error('Reservation database save failed:', data)
-        toast('Booking email sent, but admin dashboard save failed.', {
-          icon: '⚠️',
-        })
-      }
-
-      setSuccess(true)
-      setForm(EMPTY)
-      toast.success('Table booked! We look forward to seeing you soon.')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.'
-      toast.error(message)
-    } finally {
-      setLoading(false)
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (!validate()) {
+      e.preventDefault()
     }
   }
 
@@ -171,171 +116,141 @@ export default function Reservation() {
           </p>
         </motion.div>
 
-        {success ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-16 rounded-2xl"
-            style={{ background: '#1a1a1a', border: '1px solid #2e2e2e' }}
-          >
-            <div className="text-6xl mb-4">Reservation received</div>
-            <h3
-              className="text-2xl font-bold mb-3"
-              style={{ fontFamily: "'Playfair Display',serif", color: '#faf8f4' }}
-            >
-              Reservation Confirmed!
-            </h3>
-            <p className="mb-6" style={{ fontFamily: "'DM Sans',sans-serif", color: '#8a8a8a' }}>
-              We&apos;ve received your booking. See you soon at Sammy&apos;s!
-            </p>
-            <button onClick={() => setSuccess(false)} className="btn-ember">
-              Make Another Booking
-            </button>
-          </motion.div>
-        ) : (
-          <motion.form
-            initial={{ opacity: 0, y: 24 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            onSubmit={handleSubmit}
-            className="rounded-2xl p-8 lg:p-10"
-            style={{ background: '#1a1a1a', border: '1px solid #2e2e2e' }}
-          >
-            <div className="grid sm:grid-cols-2 gap-5 mb-5">
-              <div>
-                {lbl('Full Name', true)}
-                <input
-                  className="form-field"
-                  value={form.full_name}
-                  onChange={(e) => set('full_name', e.target.value)}
-                  placeholder="John Smith"
-                />
-                {errMsg('full_name')}
-              </div>
-              <div>
-                {lbl('Email Address', true)}
-                <input
-                  className="form-field"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => set('email', e.target.value)}
-                  placeholder="john@example.com"
-                />
-                {errMsg('email')}
-              </div>
-            </div>
+        <motion.form
+          initial={{ opacity: 0, y: 24 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.15 }}
+          action={FORMSPREE_ENDPOINT}
+          method="POST"
+          onSubmit={handleSubmit}
+          className="rounded-2xl p-8 lg:p-10"
+          style={{ background: '#1a1a1a', border: '1px solid #2e2e2e' }}
+        >
+          <input type="hidden" name="_subject" value="New Reservation - Sammy's Grill" />
 
-            <div className="grid sm:grid-cols-2 gap-5 mb-5">
-              <div>
-                {lbl('Phone Number', true)}
-                <input
-                  className="form-field"
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => set('phone', e.target.value)}
-                  placeholder="+91 98765 43210"
-                />
-                {errMsg('phone')}
-              </div>
-              <div>
-                {lbl('Number of Guests', true)}
-                <select
-                  className="form-field"
-                  value={form.guests}
-                  onChange={(e) => set('guests', Number(e.target.value))}
-                >
-                  {GUEST_OPTIONS.map((n) => (
-                    <option key={n} value={n}>
-                      {n} {n === 1 ? 'Guest' : 'Guests'}
+          <div className="grid sm:grid-cols-2 gap-5 mb-5">
+            <div>
+              {lbl('Full Name', true)}
+              <input
+                className="form-field"
+                name="fullname"
+                value={form.full_name}
+                onChange={(e) => set('full_name', e.target.value)}
+                placeholder="John Smith"
+              />
+              {errMsg('full_name')}
+            </div>
+            <div>
+              {lbl('Email Address', true)}
+              <input
+                className="form-field"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={(e) => set('email', e.target.value)}
+                placeholder="john@example.com"
+              />
+              {errMsg('email')}
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-5 mb-5">
+            <div>
+              {lbl('Phone Number', true)}
+              <input
+                className="form-field"
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={(e) => set('phone', e.target.value)}
+                placeholder="+91 98765 43210"
+              />
+              {errMsg('phone')}
+            </div>
+            <div>
+              {lbl('Number of Guests', true)}
+              <select
+                className="form-field"
+                name="guests"
+                value={form.guests}
+                onChange={(e) => set('guests', Number(e.target.value))}
+              >
+                {GUEST_OPTIONS.map((n) => (
+                  <option key={n} value={n}>
+                    {n} {n === 1 ? 'Guest' : 'Guests'}
+                  </option>
+                ))}
+              </select>
+              {errMsg('guests')}
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-5 mb-5">
+            <div>
+              {lbl('Reservation Date', true)}
+              <input
+                className="form-field"
+                type="date"
+                name="date"
+                min={today}
+                value={form.reservation_date}
+                onChange={(e) => set('reservation_date', e.target.value)}
+                style={{ colorScheme: 'dark' }}
+              />
+              {errMsg('reservation_date')}
+            </div>
+            <div>
+              {lbl('Time Slot', true)}
+              <select
+                className="form-field"
+                name="timeslot"
+                value={form.reservation_time}
+                onChange={(e) => set('reservation_time', e.target.value)}
+              >
+                <option value="">Select a time...</option>
+                <optgroup label="Lunch (11:00 - 14:30)">
+                  {TIME_SLOTS.slice(0, 8).map((t) => (
+                    <option key={t} value={t}>
+                      {t}
                     </option>
                   ))}
-                </select>
-                {errMsg('guests')}
-              </div>
+                </optgroup>
+                <optgroup label="Dinner (18:00 - 22:00)">
+                  {TIME_SLOTS.slice(8).map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+              {errMsg('reservation_time')}
             </div>
+          </div>
 
-            <div className="grid sm:grid-cols-2 gap-5 mb-5">
-              <div>
-                {lbl('Reservation Date', true)}
-                <input
-                  className="form-field"
-                  type="date"
-                  min={today}
-                  value={form.reservation_date}
-                  onChange={(e) => set('reservation_date', e.target.value)}
-                  style={{ colorScheme: 'dark' }}
-                />
-                {errMsg('reservation_date')}
-              </div>
-              <div>
-                {lbl('Time Slot', true)}
-                <select
-                  className="form-field"
-                  value={form.reservation_time}
-                  onChange={(e) => set('reservation_time', e.target.value)}
-                >
-                  <option value="">Select a time...</option>
-                  <optgroup label="Lunch (11:00 - 14:30)">
-                    {TIME_SLOTS.slice(0, 8).map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Dinner (18:00 - 22:00)">
-                    {TIME_SLOTS.slice(8).map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-                {errMsg('reservation_time')}
-              </div>
-            </div>
+          <div className="mb-8">
+            {lbl('Special Requests')}
+            <textarea
+              className="form-field"
+              rows={3}
+              name="specialrequests"
+              value={form.special_requests}
+              onChange={(e) => set('special_requests', e.target.value)}
+              placeholder="Allergies, special occasions, seating preferences..."
+            />
+          </div>
 
-            <div className="mb-8">
-              {lbl('Special Requests')}
-              <textarea
-                className="form-field"
-                rows={3}
-                value={form.special_requests}
-                onChange={(e) => set('special_requests', e.target.value)}
-                placeholder="Allergies, special occasions, seating preferences..."
-              />
-            </div>
+          <button
+            type="submit"
+            className="btn-ember w-full justify-center text-base"
+            style={{ borderRadius: '8px', padding: '1rem' }}
+          >
+            Book Now
+          </button>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-ember w-full justify-center text-base"
-              style={{ borderRadius: '8px', padding: '1rem' }}
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeDasharray="40"
-                      strokeDashoffset="10"
-                    />
-                  </svg>
-                  Booking...
-                </span>
-              ) : (
-                'Book Now'
-              )}
-            </button>
-
-            <p className="text-center mt-4 text-xs" style={{ fontFamily: "'DM Sans',sans-serif", color: '#8a8a8a' }}>
-              We&apos;ll confirm your reservation within 30 minutes via email.
-            </p>
-          </motion.form>
-        )}
+          <p className="text-center mt-4 text-xs" style={{ fontFamily: "'DM Sans',sans-serif", color: '#8a8a8a' }}>
+            You&apos;ll be sent to Formspree&apos;s confirmation page after booking.
+          </p>
+        </motion.form>
       </div>
     </section>
   )
