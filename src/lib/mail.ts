@@ -91,16 +91,62 @@ export async function sendClientReservationEmail(details: ReservationMailDetails
       `Sammy's Grill`,
     ].join('\n'),
     html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f1f1f;">
-        <h2 style="margin-bottom: 16px;">Reservation Received</h2>
-        <p>Hi ${details.full_name.trim()},</p>
-        <p>We received your reservation request.</p>
-        <p><strong>Date:</strong> ${details.reservation_date}</p>
-        <p><strong>Time:</strong> ${details.reservation_time}</p>
-        <p><strong>Guests:</strong> ${details.guests}</p>
-        <p><strong>Special requests:</strong> ${details.special_requests?.trim() || 'None'}</p>
-        <p>We will contact you shortly to confirm.</p>
-        <p><strong>Sammy's Grill</strong></p>
+      <div style="margin:0; padding:24px; background:#f3efe9; font-family:Arial, Helvetica, sans-serif; color:#f5f0e8;">
+        <div style="max-width:680px; margin:0 auto; background:#1b1b1b; border-radius:18px; overflow:hidden; border:1px solid #2e2e2e;">
+          <div style="padding:40px 32px 28px; text-align:center; background:linear-gradient(180deg, #26201d 0%, #1b1b1b 100%);">
+            <div style="font-size:22px; letter-spacing:3px; font-weight:800; color:#f05a24; text-transform:uppercase;">
+              Sammy's Grill
+            </div>
+            <div style="margin-top:12px; font-size:28px; font-weight:700; color:#f5f0e8;">
+              Your Table Is Ready
+            </div>
+            <div style="margin-top:10px; font-size:15px; color:#d4a853;">
+              Reservation request received successfully
+            </div>
+          </div>
+
+          <div style="height:3px; background:#f05a24;"></div>
+
+          <div style="padding:32px;">
+            <p style="margin:0 0 16px; font-size:28px; font-weight:700; color:#ffffff;">
+              Hi ${details.full_name.trim()},
+            </p>
+
+            <p style="margin:0 0 24px; font-size:17px; line-height:1.8; color:#d7d2cb;">
+              We are thrilled to confirm that we received your reservation request at Sammy's Grill.
+              Our team will have everything ready for your visit and will contact you shortly if anything needs confirmation.
+            </p>
+
+            <div style="background:#2b2b2b; border-radius:16px; padding:24px; border-left:5px solid #f05a24; margin-bottom:24px;">
+              <div style="margin-bottom:14px; font-size:16px; color:#b8b2aa;">
+                <strong style="display:inline-block; min-width:90px; color:#b8b2aa;">Date:</strong>
+                <span style="font-size:28px; font-weight:800; color:#ffffff;">${details.reservation_date}</span>
+              </div>
+              <div style="margin-bottom:14px; font-size:16px; color:#b8b2aa;">
+                <strong style="display:inline-block; min-width:90px; color:#b8b2aa;">Time:</strong>
+                <span style="font-size:28px; font-weight:800; color:#ffffff;">${details.reservation_time}</span>
+              </div>
+              <div style="margin-bottom:14px; font-size:16px; color:#b8b2aa;">
+                <strong style="display:inline-block; min-width:90px; color:#b8b2aa;">Guests:</strong>
+                <span style="font-size:28px; font-weight:800; color:#ffffff;">${details.guests} ${details.guests === 1 ? 'Person' : 'People'}</span>
+              </div>
+              <div style="font-size:16px; color:#b8b2aa;">
+                <strong style="display:block; margin-bottom:8px; color:#b8b2aa;">Requests:</strong>
+                <span style="font-size:24px; font-weight:700; color:#f05a24;">
+                  ${details.special_requests?.trim() || 'None'}
+                </span>
+              </div>
+            </div>
+
+            <p style="margin:0 0 12px; font-size:15px; line-height:1.7; color:#d7d2cb;">
+              Need to update anything? Reply to this email and our team will help you out.
+            </p>
+            <p style="margin:0; font-size:15px; line-height:1.7; color:#d7d2cb;">
+              Sammy's Grill<br />
+              Kanakapura, Bangalore
+            </p>
+          </div>
+        </div>
       </div>
     `,
   })
