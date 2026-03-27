@@ -1,47 +1,63 @@
-export async function sendReservationEmail(
-  to: string,
-  details: {
-    full_name: string
-    phone?: string
-    reservation_date: string
-    reservation_time: string
-    guests: number
-    special_requests?: string | null
+import nodemailer from 'nodemailer'
+
+type ReservationMailDetails = {
+  full_name: string
+  email: string
+  phone: string
+  reservation_date: string
+  reservation_time: string
+  guests: number
+  special_requests?: string | null
+}
+
+function getTransporter() {
+  const user = process.env.SMTP_EMAIL
+  const pass = process.env.SMTP_PASSWORD
+
+  if (!user || !pass) {
+    throw new Error('SMTP_EMAIL or SMTP_PASSWORD is missing')
   }
-) {
-  try {
-    console.log('Sending Formspree POST request...')
 
-    const payload = new URLSearchParams({
-      email: to.trim(),
-      _replyto: to.trim(),
-      fullname: details.full_name.trim(),
-      phone: details.phone?.trim() || 'Not provided',
-      date: details.reservation_date,
-      timeslot: details.reservation_time,
-      guests: String(details.guests),
-      specialrequests: details.special_requests?.trim() || 'None',
-      _subject: "New Reservation - Sammy's Grill",
-    })
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+  })
+}
 
-    const response = await fetch('https://formspree.io/f/mbdpljqo', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Accept: 'application/json',
-      },
-      body: payload.toString(),
-    })
+export async function sendOwnerReservationEmail(details: ReservationMailDetails) {
+  const smtpEmail = process.env.SMTP_EMAIL
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Formspree Error:', errorText)
-      throw new Error('Formspree rejected the request')
-    }
-
-    console.log('Successfully sent reservation to Formspree.')
-  } catch (error) {
-    console.error('Failed to trigger Formspree:', error)
-    throw error
+  if (!smtpEmail) {
+    throw new Error('SMTP_EMAIL is missing')
   }
+
+  const transporter = getTransporter()
+
+  await transporter.sendMail({
+    from: `"Sammy's Grill" <${smtpEmail}>`,
+    to: smtpEmail,
+    replyTo: details.email.trim(),
+    subject: `New Reservation: ${details.full_name.trim()} on ${details.reservation_date}`,
+    text: [
+      `Name: ${details.full_name.trim()}`,
+      `Email: ${details.email.trim()}`,
+      `Phone: ${details.phone.trim()}`,
+      `Date: ${details.reservation_date}`,
+      `Time: ${details.reservation_time}`,
+      `Guests: ${details.guests}`,
+      `Special requests: ${details.special_requests?.trim() || 'None'}`,
+    ].join('\n'),
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f1f1f;">
+        <h2 style="margin-bottom: 16px;">New Reservation</h2>
+        <p><strong>Name:</strong> ${details.full_name.trim()}</p>
+        <p><strong>Email:</strong> ${details.email.trim()}</p>
+        <p><strong>Phone:</strong> ${details.phone.trim()}</p>
+        <p><strong>Date:</strong> ${details.reservation_date}</p>
+        <p><strong>Time:</strong> ${details.reservation_time}</p>
+        <p><strong>Guests:</strong> ${details.guests}</p>
+        <p><strong>Special requests:</strong> ${details.special_requests?.trim() || 'None'}</p>
+      </div>
+    `,
+  })
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerClient } from '@/lib/supabase'
-// Imports
+import { sendOwnerReservationEmail } from '@/lib/mail'
 
 // GET /api/reservations — admin: list + search + filter
 export async function GET(request: Request) {
@@ -53,14 +53,35 @@ export async function POST(request: Request) {
 
     if (errs.length) return NextResponse.json({ errors: errs }, { status: 400 })
 
-    const supabase = getServerClient()
-    const { error } = await supabase
-      .from('reservations')
-      .insert({ full_name: full_name.trim(), email: email.trim().toLowerCase(), phone: phone.trim(), reservation_date, reservation_time, guests: Number(guests), special_requests: special_requests?.trim() || null })
+    const payload = {
+      full_name: full_name.trim(),
+      email: email.trim().toLowerCase(),
+      phone: phone.trim(),
+      reservation_date,
+      reservation_time,
+      guests: Number(guests),
+      special_requests: special_requests?.trim() || null,
+    }
 
-    if (error) throw error
+    let databaseSaved = false
+    try {
+      const supabase = getServerClient()
+      const { error } = await supabase
+        .from('reservations')
+        .insert(payload)
 
-    return NextResponse.json({ reservation: "success" }, { status: 201 })
+      if (error) {
+        console.error('[POST /api/reservations] Supabase save failed', error)
+      } else {
+        databaseSaved = true
+      }
+    } catch (dbError) {
+      console.error('[POST /api/reservations] Supabase exception', dbError)
+    }
+
+    await sendOwnerReservationEmail(payload)
+
+    return NextResponse.json({ reservation: 'success', databaseSaved }, { status: 201 })
   } catch (err) {
     console.error('[POST /api/reservations]', err)
     return NextResponse.json({ error: 'Failed to create reservation' }, { status: 500 })
