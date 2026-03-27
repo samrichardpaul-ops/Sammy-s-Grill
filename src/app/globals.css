@@ -11,22 +11,86 @@
   html {
     scroll-behavior: smooth;
   }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #111;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #e8501a60;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #e8501a;
+  }
 }
 
 @layer components {
   .section-divider {
     @apply w-12 h-px bg-[#e8501a];
   }
+
+  .section-title {
+    font-family: var(--font-playfair);
+    @apply text-4xl md:text-5xl font-bold;
+    color: #faf8f4;
+  }
+
   .btn-ember {
-    @apply bg-[#e8501a] text-white hover:bg-[#d84a18] transition-colors duration-300 font-medium;
+    @apply inline-flex items-center bg-[#e8501a] text-white font-semibold
+           hover:bg-[#d04318] active:bg-[#be3c14]
+           transition-all duration-200 shadow-md hover:shadow-orange-900/40
+           hover:shadow-lg cursor-pointer;
   }
+
   .btn-outline {
-    @apply border border-[rgba(245,240,232,0.3)] text-[#f5f0e8] hover:bg-[rgba(245,240,232,0.05)] hover:border-[#f5f0e8] transition-all duration-300 backdrop-blur-sm;
+    @apply border border-[rgba(245,240,232,0.3)] text-[#f5f0e8]
+           hover:bg-[rgba(245,240,232,0.05)] hover:border-[#f5f0e8]
+           transition-all duration-300 backdrop-blur-sm;
   }
+
   .heading-playfair {
     font-family: var(--font-playfair);
   }
+
   .text-dmsans {
     font-family: var(--font-dmsans);
+  }
+
+  /* Unified dark form field used in Reservation and Contact */
+  .form-field {
+    @apply w-full rounded-xl text-sm outline-none transition-all duration-200;
+    font-family: var(--font-dmsans);
+    background: #242424;
+    border: 1px solid #3a3a3a;
+    color: #faf8f4;
+    padding: 0.75rem 1rem;
+  }
+  .form-field::placeholder {
+    color: #606060;
+  }
+  .form-field:focus {
+    border-color: #e8501a;
+    box-shadow: 0 0 0 3px rgba(232, 80, 26, 0.12);
+  }
+  .form-field option {
+    background: #1a1a1a;
+    color: #faf8f4;
+  }
+
+  /* Hide scrollbar utility */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

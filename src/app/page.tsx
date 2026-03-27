@@ -1,11 +1,13 @@
-import Navbar      from '@/components/Navbar'
-import Hero        from '@/components/Hero'
-import About       from '@/components/About'
-import Menu        from '@/components/Menu'
-import Gallery     from '@/components/Gallery'
-import Reservation from '@/components/Reservation'
-import Contact     from '@/components/Contact'
-import Footer      from '@/components/Footer'
+import Navbar        from '@/components/Navbar'
+import Hero          from '@/components/Hero'
+import About         from '@/components/About'
+import Menu          from '@/components/Menu'
+import SpecialOffers from '@/components/SpecialOffers'
+import Packages      from '@/components/Packages'
+import Gallery       from '@/components/Gallery'
+import Reservation   from '@/components/Reservation'
+import Contact       from '@/components/Contact'
+import Footer        from '@/components/Footer'
 
 export default function HomePage() {
   return (
@@ -15,6 +17,8 @@ export default function HomePage() {
         <Hero />
         <About />
         <Menu />
+        <SpecialOffers />
+        <Packages />
         <Gallery />
         <Reservation />
         <Contact />
