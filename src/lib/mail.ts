@@ -49,15 +49,65 @@ export async function sendOwnerReservationEmail(details: ReservationMailDetails)
       `Special requests: ${details.special_requests?.trim() || 'None'}`,
     ].join('\n'),
     html: `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f1f1f;">
-        <h2 style="margin-bottom: 16px;">New Reservation</h2>
-        <p><strong>Name:</strong> ${details.full_name.trim()}</p>
-        <p><strong>Email:</strong> ${details.email.trim()}</p>
-        <p><strong>Phone:</strong> ${details.phone.trim()}</p>
-        <p><strong>Date:</strong> ${details.reservation_date}</p>
-        <p><strong>Time:</strong> ${details.reservation_time}</p>
-        <p><strong>Guests:</strong> ${details.guests}</p>
-        <p><strong>Special requests:</strong> ${details.special_requests?.trim() || 'None'}</p>
+      <div style="margin:0; padding:24px; background:#f3efe9; font-family:Arial, Helvetica, sans-serif; color:#f5f0e8;">
+        <div style="max-width:680px; margin:0 auto; background:#1b1b1b; border-radius:18px; overflow:hidden; border:1px solid #2e2e2e;">
+          <div style="padding:36px 32px 26px; text-align:center; background:linear-gradient(180deg, #26201d 0%, #1b1b1b 100%);">
+            <div style="font-size:22px; letter-spacing:3px; font-weight:800; color:#f05a24; text-transform:uppercase;">
+              Sammy's Grill
+            </div>
+            <div style="margin-top:12px; font-size:28px; font-weight:700; color:#f5f0e8;">
+              New Reservation Alert
+            </div>
+            <div style="margin-top:10px; font-size:15px; color:#d4a853;">
+              A new customer just booked a table
+            </div>
+          </div>
+
+          <div style="height:3px; background:#f05a24;"></div>
+
+          <div style="padding:32px;">
+            <p style="margin:0 0 22px; font-size:18px; line-height:1.7; color:#d7d2cb;">
+              A reservation request has been submitted through the website.
+            </p>
+
+            <div style="background:#2b2b2b; border-radius:16px; padding:24px; border-left:5px solid #f05a24; margin-bottom:24px;">
+              <div style="margin-bottom:14px; font-size:16px; color:#b8b2aa;">
+                <strong style="display:inline-block; min-width:90px; color:#b8b2aa;">Name:</strong>
+                <span style="font-size:24px; font-weight:800; color:#ffffff;">${details.full_name.trim()}</span>
+              </div>
+              <div style="margin-bottom:14px; font-size:16px; color:#b8b2aa;">
+                <strong style="display:inline-block; min-width:90px; color:#b8b2aa;">Email:</strong>
+                <span style="font-size:18px; font-weight:700; color:#ffffff;">${details.email.trim()}</span>
+              </div>
+              <div style="margin-bottom:14px; font-size:16px; color:#b8b2aa;">
+                <strong style="display:inline-block; min-width:90px; color:#b8b2aa;">Phone:</strong>
+                <span style="font-size:18px; font-weight:700; color:#ffffff;">${details.phone.trim()}</span>
+              </div>
+              <div style="margin-bottom:14px; font-size:16px; color:#b8b2aa;">
+                <strong style="display:inline-block; min-width:90px; color:#b8b2aa;">Date:</strong>
+                <span style="font-size:24px; font-weight:800; color:#ffffff;">${details.reservation_date}</span>
+              </div>
+              <div style="margin-bottom:14px; font-size:16px; color:#b8b2aa;">
+                <strong style="display:inline-block; min-width:90px; color:#b8b2aa;">Time:</strong>
+                <span style="font-size:24px; font-weight:800; color:#ffffff;">${details.reservation_time}</span>
+              </div>
+              <div style="margin-bottom:14px; font-size:16px; color:#b8b2aa;">
+                <strong style="display:inline-block; min-width:90px; color:#b8b2aa;">Guests:</strong>
+                <span style="font-size:24px; font-weight:800; color:#ffffff;">${details.guests} ${details.guests === 1 ? 'Person' : 'People'}</span>
+              </div>
+              <div style="font-size:16px; color:#b8b2aa;">
+                <strong style="display:block; margin-bottom:8px; color:#b8b2aa;">Requests:</strong>
+                <span style="font-size:22px; font-weight:700; color:#f05a24;">
+                  ${details.special_requests?.trim() || 'None'}
+                </span>
+              </div>
+            </div>
+
+            <p style="margin:0; font-size:15px; line-height:1.7; color:#d7d2cb;">
+              Reply directly to this email to reach the customer.
+            </p>
+          </div>
+        </div>
       </div>
     `,
   })
