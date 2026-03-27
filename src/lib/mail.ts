@@ -26,6 +26,7 @@ function getTransporter() {
 
 export async function sendOwnerReservationEmail(details: ReservationMailDetails) {
   const smtpEmail = process.env.SMTP_EMAIL
+  const notificationEmail = process.env.OWNER_NOTIFICATION_EMAIL?.trim() || 'shreyass5956@gmail.com'
 
   if (!smtpEmail) {
     throw new Error('SMTP_EMAIL is missing')
@@ -35,7 +36,7 @@ export async function sendOwnerReservationEmail(details: ReservationMailDetails)
 
   await transporter.sendMail({
     from: `"Sammy's Grill" <${smtpEmail}>`,
-    to: smtpEmail,
+    to: notificationEmail,
     replyTo: details.email.trim(),
     subject: `New Reservation: ${details.full_name.trim()} on ${details.reservation_date}`,
     text: [
