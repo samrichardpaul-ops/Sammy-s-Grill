@@ -89,7 +89,7 @@ export default function SpecialOffers() {
             viewport={{ once: true }}
             className="text-white/50 text-dmsans max-w-xl mx-auto"
           >
-            Hand-picked deals that make every visit to Sammy's even more rewarding.
+            Hand-picked deals that make every visit to Sammy&apos;s even more rewarding.
           </motion.p>
         </div>
 
