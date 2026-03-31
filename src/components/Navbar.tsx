@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Menu, X, Phone, LogIn, LogOut, ChevronDown, User } from 'lucide-react'
+import { Menu, X, Phone, LogIn, LogOut, ChevronDown, User, Shield } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
 export default function Navbar() {
@@ -194,6 +194,15 @@ export default function Navbar() {
             </button>
           )}
 
+          <Link
+            href="/admin"
+            className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg transition-all border border-transparent text-white/60 hover:text-white hover:bg-[#e8501a]/10"
+            style={{ fontFamily: "'DM Sans',sans-serif" }}
+            title="Admin Login"
+          >
+            <Shield size={16} />
+          </Link>
+
           <a
             href="#reservation"
             className="hidden md:inline-flex btn-ember items-center gap-1.5 text-sm font-semibold px-5 py-2.5 rounded-lg"
@@ -257,6 +266,14 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
+              <Link
+                href="/admin"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 text-white/70 hover:text-white hover:bg-white/5 uppercase tracking-wider text-sm p-3 rounded-lg transition-all"
+                style={{ fontFamily: "'DM Sans',sans-serif" }}
+              >
+                <Shield size={16} /> Admin Panel
+              </Link>
               <a
                 href="#reservation"
                 onClick={() => setIsOpen(false)}

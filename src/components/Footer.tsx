@@ -40,13 +40,14 @@ export default function Footer() {
           <h4 className="text-xs font-bold uppercase tracking-widest text-white/30 mb-5">Explore</h4>
           <ul className="space-y-3">
             {[
-              { label: 'Home', href: '#home' },
-              { label: 'Menu', href: '#menu' },
-              { label: 'Special Offers', href: '#offers' },
-              { label: 'Packages', href: '#packages' },
-              { label: 'Gallery', href: '#gallery' },
-              { label: 'Reservation', href: '#reservation' },
-              { label: 'About Us', href: '#about' },
+              { label: 'Home', href: '/#home' },
+              { label: 'Menu', href: '/#menu' },
+              { label: 'Special Offers', href: '/#offers' },
+              { label: 'Packages', href: '/#packages' },
+              { label: 'Gallery', href: '/#gallery' },
+              { label: 'Reservation', href: '/#reservation' },
+              { label: 'About Us', href: '/#about' },
+              { label: 'Admin Panel', href: '/admin' },
             ].map((l, i) => (
               <li key={i}>
                 <Link href={l.href} className="text-sm text-white/50 hover:text-[#e8501a] transition-colors">

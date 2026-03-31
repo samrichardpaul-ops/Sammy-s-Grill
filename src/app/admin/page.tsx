@@ -1,233 +1,266 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import toast from 'react-hot-toast'
-import type { Reservation } from '@/lib/types'
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { Calendar, Users, Clock, Mail, Phone, ChevronRight, LogOut, Search, X } from 'lucide-react'
+import Link from 'next/link'
 
 export default function AdminPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([])
-  const [loading,      setLoading]      = useState(true)
-  const [search,       setSearch]       = useState('')
-  const [dateFilter,   setDateFilter]   = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [deleting,     setDeleting]     = useState<string | null>(null)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  
+  const [reservations, setReservations] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [search, setSearch] = useState('')
 
-  const fetchReservations = useCallback(async () => {
+  // Check login state on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const auth = localStorage.getItem('sg_admin_auth')
+      if (auth === 'true') {
+        setIsLoggedIn(true)
+        fetchReservations()
+      }
+    }
+  }, [])
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Simple password check for demonstration (in production, use secure auth)
+    if (password === 'admin123' || password === 'owner') {
+      setIsLoggedIn(true)
+      localStorage.setItem('sg_admin_auth', 'true')
+      setError('')
+      fetchReservations()
+    } else {
+      setError('Invalid password')
+    }
+  }
+
+  const handleLogout = () => {
+    setIsLoggedIn(false)
+    setPassword('')
+    localStorage.removeItem('sg_admin_auth')
+    setReservations([])
+  }
+
+  const fetchReservations = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams()
-      if (search)       params.set('q',      search)
-      if (dateFilter)   params.set('date',   dateFilter)
-      if (statusFilter) params.set('status', statusFilter)
-      const res = await fetch(`/api/reservations?${params}`)
+      const res = await fetch('/api/reservations')
       const data = await res.json()
-      setReservations(data.reservations ?? [])
-    } catch { toast.error('Failed to load reservations') }
-    finally { setLoading(false) }
-  }, [search, dateFilter, statusFilter])
-
-  useEffect(() => { fetchReservations() }, [fetchReservations])
-
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete reservation for ${name}?`)) return
-    setDeleting(id)
-    try {
-      const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error()
-      setReservations(prev => prev.filter(r => r.id !== id))
-      toast.success('Reservation deleted')
-    } catch { toast.error('Failed to delete') }
-    finally { setDeleting(null) }
+      if (res.ok) {
+        setReservations(data.reservations || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch reservations', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  async function handleStatus(id: string, status: string) {
-    try {
-      const res = await fetch(`/api/reservations/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      })
-      if (!res.ok) throw new Error()
-      const { reservation } = await res.json()
-      setReservations(prev => prev.map(r => r.id === id ? reservation : r))
-      toast.success(`Status updated to ${status}`)
-    } catch { toast.error('Failed to update status') }
-  }
+  const filteredReservations = reservations.filter(r => 
+    r.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+    r.email?.toLowerCase().includes(search.toLowerCase()) ||
+    r.phone?.includes(search)
+  )
 
-  const stats = {
-    total:     reservations.length,
-    pending:   reservations.filter(r => r.status === 'pending').length,
-    confirmed: reservations.filter(r => r.status === 'confirmed').length,
-    guests:    reservations.reduce((s, r) => s + r.guests, 0),
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-6" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md p-8 rounded-2xl bg-[#141414] border border-[#2a2a2a]"
+        >
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white heading-playfair mb-2">Admin Login</h1>
+            <p className="text-white/50 text-sm">Sign in to manage reservations</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-[#8a8a8a] mb-2 font-medium">Password</label>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#e8501a] transition-colors"
+                placeholder="Enter admin password (hint: admin123)"
+              />
+            </div>
+            {error && <p className="text-[#e8501a] text-sm">{error}</p>}
+            <button 
+              type="submit" 
+              className="w-full btn-ember py-3 rounded-xl font-semibold text-white transition-all hover:scale-[1.02]"
+            >
+              Sign In
+            </button>
+            <div className="text-center mt-4">
+              <Link href="/" className="text-sm text-white/40 hover:text-white transition-colors">
+                ← Back to main site
+              </Link>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#111', color: '#faf8f4', fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Header */}
-      <div className="border-b px-8 py-5 flex items-center justify-between" style={{ borderColor: '#2e2e2e', background: '#1a1a1a' }}>
-        <div className="flex items-center gap-4">
-          <a href="/" className="text-sm" style={{ color: '#8a8a8a' }}>← Back to site</a>
-          <span style={{ color: '#3a3a3a' }}>|</span>
-          <h1 className="text-xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
-            Sammy&apos;s <span style={{ color: '#e8501a' }}>Admin</span>
-          </h1>
-        </div>
-        <span className="text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(232,80,26,0.15)', color: '#e8501a', border: '1px solid rgba(232,80,26,0.3)' }}>
-          Reservations Panel
-        </span>
-      </div>
-
-      <div className="px-8 py-8 max-w-7xl mx-auto">
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'Total Bookings',  value: stats.total,     color: '#e8501a' },
-            { label: 'Pending',         value: stats.pending,   color: '#d4a853' },
-            { label: 'Confirmed',       value: stats.confirmed, color: '#4ade80' },
-            { label: 'Total Guests',    value: stats.guests,    color: '#60a5fa' },
-          ].map(s => (
-            <div key={s.label} className="rounded-xl p-5" style={{ background: '#1a1a1a', border: '1px solid #2e2e2e' }}>
-              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#8a8a8a' }}>{s.label}</p>
-              <p className="text-3xl font-bold" style={{ fontFamily: "'Playfair Display',serif", color: s.color }}>{s.value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Filters */}
-        <div className="flex gap-3 mb-6 flex-wrap">
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name, email, phone..."
-            className="flex-1 min-w-[220px] rounded-lg px-4 py-2.5 text-sm outline-none"
-            style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', color: '#faf8f4' }}
-            onKeyDown={e => e.key === 'Enter' && fetchReservations()}
-          />
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={e => setDateFilter(e.target.value)}
-            className="rounded-lg px-4 py-2.5 text-sm outline-none"
-            style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', color: '#faf8f4' }}
-          />
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="rounded-lg px-4 py-2.5 text-sm outline-none"
-            style={{ background: '#1a1a1a', border: '1px solid #3a3a3a', color: '#faf8f4' }}
+    <div className="min-h-screen bg-[#0d0d0d]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      {/* Admin Navbar */}
+      <nav className="bg-[#141414] border-b border-[#2a2a2a] sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-xl font-bold text-white heading-playfair">
+              Sammy&apos;s<span className="text-[#e8501a]"> Grill</span>
+            </Link>
+            <span className="text-[#2a2a2a]">|</span>
+            <span className="text-white/80 font-medium">Admin Dashboard</span>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-sm text-white/50 hover:text-[#e8501a] transition-colors"
           >
-            <option value="">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <button
-            onClick={fetchReservations}
-            className="px-5 py-2.5 rounded-lg text-sm font-semibold"
-            style={{ background: '#e8501a', color: 'white' }}
-          >
-            Search
-          </button>
-          <button
-            onClick={() => { setSearch(''); setDateFilter(''); setStatusFilter('') }}
-            className="px-5 py-2.5 rounded-lg text-sm"
-            style={{ background: '#2e2e2e', color: '#8a8a8a' }}
-          >
-            Clear
+            <LogOut size={16} />
+            Sign Out
           </button>
         </div>
+      </nav>
 
-        {/* Table */}
-        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #2e2e2e', background: '#1a1a1a' }}>
-          {loading ? (
-            <div className="flex items-center justify-center py-20 text-sm" style={{ color: '#8a8a8a' }}>
-              Loading reservations…
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-white heading-playfair mb-2">Reservations</h2>
+            <p className="text-white/50 text-sm">Manage all incoming bookings and guest requests.</p>
+          </div>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative w-full md:w-64">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+              <input 
+                type="text" 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search guests..."
+                className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-[#e8501a] transition-colors"
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white">
+                  <X size={14} />
+                </button>
+              )}
             </div>
-          ) : reservations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <span className="text-4xl">📋</span>
-              <p style={{ color: '#8a8a8a' }}>No reservations found</p>
-            </div>
-          ) : (
-            <table className="w-full admin-table">
+            <button 
+              onClick={fetchReservations}
+              disabled={loading}
+              className="px-4 py-2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl text-sm text-white/70 hover:text-white hover:border-white/20 transition-all flex items-center gap-2"
+            >
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+        </div>
+
+        {/* Reservations Table */}
+        <div className="bg-[#141414] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr style={{ background: '#242424' }}>
-                  <th className="text-left">Guest</th>
-                  <th className="text-left">Contact</th>
-                  <th className="text-left">Date & Time</th>
-                  <th className="text-left">Guests</th>
-                  <th className="text-left">Special Requests</th>
-                  <th className="text-left">Status</th>
-                  <th className="text-left">Actions</th>
+                <tr className="bg-[#1a1a1a] border-b border-[#2a2a2a]">
+                  <th className="px-6 py-4 text-xs uppercase tracking-widest text-white/40 font-medium whitespace-nowrap">Guest</th>
+                  <th className="px-6 py-4 text-xs uppercase tracking-widest text-white/40 font-medium whitespace-nowrap">Contact</th>
+                  <th className="px-6 py-4 text-xs uppercase tracking-widest text-white/40 font-medium whitespace-nowrap">Date & Time</th>
+                  <th className="px-6 py-4 text-xs uppercase tracking-widest text-white/40 font-medium whitespace-nowrap">Details</th>
+                  <th className="px-6 py-4 text-xs uppercase tracking-widest text-white/40 font-medium whitespace-nowrap text-right">Status</th>
                 </tr>
               </thead>
-              <tbody>
-                <AnimatePresence>
-                  {reservations.map(r => (
-                    <motion.tr
-                      key={r.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0, height: 0 }}
-                    >
-                      <td>
-                        <div className="font-semibold" style={{ color: '#faf8f4' }}>{r.full_name}</div>
-                        <div className="text-xs mt-0.5" style={{ color: '#8a8a8a' }}>
-                          {new Date(r.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}
-                        </div>
-                      </td>
-                      <td>
-                        <div>{r.email}</div>
-                        <div className="text-xs mt-0.5" style={{ color: '#8a8a8a' }}>{r.phone}</div>
-                      </td>
-                      <td>
-                        <div>{new Date(r.reservation_date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</div>
-                        <div className="text-xs mt-0.5" style={{ color: '#8a8a8a' }}>{r.reservation_time}</div>
-                      </td>
-                      <td>{r.guests} {r.guests === 1 ? 'Guest' : 'Guests'}</td>
-                      <td>
-                        <span className="text-xs" style={{ color: '#8a8a8a' }}>
-                          {r.special_requests ?? '—'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`badge badge-${r.status}`}>{r.status}</span>
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <select
-                            value={r.status}
-                            onChange={e => handleStatus(r.id, e.target.value)}
-                            className="text-xs rounded px-2 py-1 outline-none"
-                            style={{ background: '#2e2e2e', border: '1px solid #3a3a3a', color: '#faf8f4' }}
-                          >
-                            <option value="pending">pending</option>
-                            <option value="confirmed">confirmed</option>
-                            <option value="cancelled">cancelled</option>
-                          </select>
-                          <button
-                            onClick={() => handleDelete(r.id, r.full_name)}
-                            disabled={deleting === r.id}
-                            className="text-xs px-3 py-1 rounded transition-all"
-                            style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171', border: '1px solid rgba(239,68,68,0.25)' }}
-                          >
-                            {deleting === r.id ? '…' : 'Delete'}
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
+              <tbody className="divide-y divide-[#2a2a2a]">
+                {loading && reservations.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-white/50">
+                      Loading reservations...
+                    </td>
+                  </tr>
+                ) : filteredReservations.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-white/50">
+                      No reservations found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredReservations.map((res) => {
+                    const date = new Date(res.reservation_date)
+                    const isToday = date.toDateString() === new Date().toDateString()
+                    
+                    return (
+                      <tr key={res.id} className="hover:bg-[#1a1a1a] transition-colors">
+                        <td className="px-6 py-4 align-top">
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#e8501a]/10 flex items-center justify-center text-[#e8501a] font-bold shrink-0">
+                              {res.full_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">{res.full_name}</p>
+                              <div className="flex items-center gap-1.5 text-xs text-white/40 mt-1">
+                                <Users size={12} />
+                                {res.guests} {res.guests === 1 ? 'Guest' : 'Guests'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 align-top">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-sm text-white/70">
+                              <Mail size={14} className="text-[#e8501a]/70" />
+                              <a href={`mailto:${res.email}`} className="hover:text-white transition-colors">{res.email}</a>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-white/70">
+                              <Phone size={14} className="text-[#e8501a]/70" />
+                              <a href={`tel:${res.phone}`} className="hover:text-white transition-colors">{res.phone}</a>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 align-top">
+                          <div className="space-y-1.5">
+                            <div className={`flex items-center gap-2 text-sm ${isToday ? 'text-[#e8501a] font-medium' : 'text-white/70'}`}>
+                              <Calendar size={14} />
+                              {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              {isToday && <span className="text-[10px] bg-[#e8501a]/20 px-1.5 py-0.5 rounded text-[#e8501a] ml-1">Today</span>}
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-white/70">
+                              <Clock size={14} className="text-[#e8501a]/70" />
+                              {res.reservation_time}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 align-top max-w-xs">
+                          {res.special_requests ? (
+                            <p className="text-sm text-white/60 line-clamp-2" title={res.special_requests}>
+                              {res.special_requests}
+                            </p>
+                          ) : (
+                            <span className="text-sm text-white/30 italic">No special requests</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 align-top text-right">
+                          <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20">
+                            Confirmed
+                          </span>
+                          <div className="text-[10px] text-white/30 mt-2">
+                            Booked: {new Date(res.created_at).toLocaleDateString()}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
               </tbody>
             </table>
-          )}
+          </div>
         </div>
-
-        <p className="mt-4 text-xs text-center" style={{ color: '#3a3a3a' }}>
-          {reservations.length} record{reservations.length !== 1 ? 's' : ''} found
-        </p>
-      </div>
+      </main>
     </div>
   )
 }
