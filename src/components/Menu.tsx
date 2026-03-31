@@ -54,14 +54,14 @@ const menuData = {
       desc: "Half chicken marinated 24hrs in peri-peri, flame grilled with charred corn",
       price: "Rs. 1920",
       tag: "Spicy",
-      image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c8?w=600&q=80",
+      image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600&q=80",
     },
     {
       name: "Grilled Cauliflower Steak",
       desc: "Chimichurri, toasted almonds, roasted red pepper, sweet potato mash",
       price: "Rs. 1440",
       tag: "Vegan",
-      image: "https://images.unsplash.com/photo-1568600891618-a0ecb2a5bd60?w=600&q=80",
+      image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80",
     },
   ],
   Desserts: [
