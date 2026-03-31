@@ -2,15 +2,27 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, Users, Clock, Mail, Phone, ChevronRight, LogOut, Search, X } from 'lucide-react'
+import { Calendar, Users, Clock, Mail, Phone, LogOut, Search, X } from 'lucide-react'
 import Link from 'next/link'
+
+interface Reservation {
+  id: string
+  full_name: string
+  email: string
+  phone: string
+  reservation_date: string
+  reservation_time: string
+  guests: number
+  special_requests?: string
+  created_at: string
+}
 
 export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   
-  const [reservations, setReservations] = useState<any[]>([])
+  const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -190,7 +202,7 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredReservations.map((res) => {
+                  filteredReservations.map((res: Reservation) => {
                     const date = new Date(res.reservation_date)
                     const isToday = date.toDateString() === new Date().toDateString()
                     
